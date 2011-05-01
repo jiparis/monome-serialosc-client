@@ -1,0 +1,26 @@
+This is a java client for monome serialosc.
+It supports both grid and arc.
+
+How to use::
+  
+  // look for devices
+  MonomeZeroconf s = new MonomeZeroconf();
+  String[] monomes = s.getDevices(); 
+  
+  // connect
+  MonomeDevice m = s.connect(monomes[0], "/myapp", 8000);
+  // listen for grid events
+  m.addListener(new GridListener() {
+    @Override	
+    public void press(int x, int y, int state) {
+	  m.grid.set(x, y, state);				
+    }
+  });
+  ...
+
+Tested with a 40h kit.
+
+Credits::
+  Developed by jiparis at gmail.com
+  Thanks to the awesome monome community.
+  Thanks to the javaosc and jmdns libraries.
