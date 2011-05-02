@@ -36,6 +36,7 @@ public class MonomeDevice{
 	OSCPortOut OSCout;
 	
 	public final GridCommands grid;
+	public final RingCommands ring;
 	
 	ArrayList<GridListener> gridListeners = new ArrayList<GridListener>();
 	ArrayList<TiltListener> tiltListeners = new ArrayList<TiltListener>();
@@ -84,6 +85,7 @@ public class MonomeDevice{
 		}
 		// Device commands
 		grid = new GridCommands(this);
+		ring = new RingCommands(this);
 	}
 
 	/**
