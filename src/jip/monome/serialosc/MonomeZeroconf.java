@@ -43,7 +43,7 @@ public class MonomeZeroconf {
      * @return a map<name, info> with the monomes attached to this computer
      */
     public String[] getDevices() {
-        return (String[]) monomesMap.keySet().toArray();
+        return monomesMap.keySet().toArray(new String[0]);
     }
 
     /**

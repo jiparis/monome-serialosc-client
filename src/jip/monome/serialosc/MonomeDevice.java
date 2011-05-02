@@ -1,7 +1,6 @@
 package jip.monome.serialosc;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -239,8 +238,6 @@ public class MonomeDevice {
                     l.press(encoder, state);
                 }
             }
-
         }
-
     }
 }
