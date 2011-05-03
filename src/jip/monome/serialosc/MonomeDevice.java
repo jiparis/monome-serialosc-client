@@ -36,6 +36,7 @@ public class MonomeDevice {
 
     String id, host, prefix;
     int portIn, portOut, sizex, sizey;
+    boolean focus;
 
     OSCPortIn OSCin;
     OSCPortOut OSCout;
@@ -53,6 +54,10 @@ public class MonomeDevice {
 
     public MonomeDevice(ServiceInfo info, String prefix, int portn) throws IOException {
 
+        this.portIn = portn;
+        this.prefix = prefix;
+        this.id = info.getName();
+        
         OSCin = new OSCPortIn(portn);
 
         SysInfoListener sysListener = new SysInfoListener();
@@ -73,10 +78,10 @@ public class MonomeDevice {
         this.portOut = info.getPort();
         OSCout = new OSCPortOut(info.getInetAddresses()[0], this.portOut);
 
-        setPortIn(portn);
-
-        setPrefix(prefix);
-
+        // on creation, this object gets the focus        
+        setFocus();      
+        
+        // get device details
         OSCMessage infoMsg = new OSCMessage();
         infoMsg.setAddress(MSG_INFO);
         OSCout.send(infoMsg);
@@ -100,6 +105,16 @@ public class MonomeDevice {
             encListeners.add((EncListener) l);
     }
 
+    /**
+     * sends out portIn and prefix to get the focus
+     * @throws IOException
+     */
+    public void setFocus() throws IOException{
+        setPortIn(this.portIn);
+        setPrefix(this.prefix);
+        focus = true;
+    }
+        
     // /sys methods
     /**
      * sets the monome prefix
@@ -127,6 +142,20 @@ public class MonomeDevice {
         portMsg.setAddress(MSG_PORT);
         portMsg.addArgument(new Integer(portIn));
         OSCout.send(portMsg);
+    }
+    
+    /**
+     * sends the app host to the monome
+     * 
+     * @param portIn
+     * @throws IOException
+     */
+    public void setHost(String host) throws IOException {
+        this.host = host;
+        OSCMessage hostMsg = new OSCMessage();
+        hostMsg.setAddress(MSG_HOST);
+        hostMsg.addArgument(host);
+        OSCout.send(hostMsg);
     }
 
     /**
@@ -159,6 +188,10 @@ public class MonomeDevice {
     public int getSizeY() {
         return this.sizey;
     }
+    
+    public boolean isFocus(){
+        return this.focus;
+    }
 
     @Override
     protected void finalize() throws Throwable {
@@ -173,6 +206,10 @@ public class MonomeDevice {
      */
     class SysInfoListener implements OSCListener {
 
+        boolean focusPort = true, 
+                focusHost = true, 
+                focusPrefix = true;
+        
         // OSCListener interface
         @Override
         public void acceptMessage(Date date, OSCMessage msg) {
@@ -181,19 +218,24 @@ public class MonomeDevice {
                 sizex = ((Integer) msg.getArguments()[0]).intValue();
                 sizey = ((Integer) msg.getArguments()[1]).intValue();
 
-            } else if (MSG_HOST.equals(address)) {
-                host = (String) msg.getArguments()[0];
-
             } else if (MSG_ID.equals(address)) {
                 id = (String) msg.getArguments()[0];
-
+                
+            // stop sending messages when focus lost
             } else if (MSG_PORT.equals(address)) {
-                portIn = ((Integer) msg.getArguments()[0]).intValue();
-
+                int newPort = ((Integer) msg.getArguments()[0]).intValue();
+                focusPort = (newPort == portIn);               
+            } else if (MSG_HOST.equals(address)) {
+                if(host != null){
+                    String newHost = (String) msg.getArguments()[0];                
+                    focusHost = host.equals(newHost);
+                }
             } else if (MSG_PREFIX.equals(address)) {
-                prefix = (String) msg.getArguments()[0];
-
+                String newPrefix = (String) msg.getArguments()[0];
+                focusPrefix = prefix.equals(newPrefix);
             }
+            focus = (focusPort && focusHost && focusPrefix);
+            
         }
     }
 
