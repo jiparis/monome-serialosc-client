@@ -3,6 +3,7 @@ package jip.monome.serialosc;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import javax.jmdns.ServiceInfo;
 
@@ -19,6 +20,7 @@ import com.illposed.osc.OSCPortOut;
  */
 public class MonomeDevice {
     public static final int DEFAULT_PORT = 8000;
+    public static final String DEFAULT_HOST = "localhost";
     public static final String DEFAULT_PREFIX = "/monome";
 
     public static final String MSG_SIZE = "/sys/size";
@@ -49,17 +51,28 @@ public class MonomeDevice {
     ArrayList<EncListener> encListeners = new ArrayList<EncListener>();
 
     public MonomeDevice(ServiceInfo info) throws IOException {
-        this(info, DEFAULT_PREFIX, DEFAULT_PORT);
+        this(info, DEFAULT_PREFIX, DEFAULT_HOST, DEFAULT_PORT);
+    }
+    
+    public MonomeDevice(ServiceInfo info, String prefix) throws IOException {
+        this(info, prefix, DEFAULT_HOST, DEFAULT_PORT);
+    }
+    
+    public MonomeDevice(ServiceInfo info, String prefix, int portn) throws IOException {
+        this(info, prefix, DEFAULT_HOST, portn);
     }
 
-    public MonomeDevice(ServiceInfo info, String prefix, int portn) throws IOException {
+    public MonomeDevice(ServiceInfo info, String prefix, String host, int portn) throws IOException {
 
         this.portIn = portn;
         this.prefix = prefix;
+        this.host = host;
         this.id = info.getName();
         
+        // create and open the input port
         OSCin = new OSCPortIn(portn);
 
+        // add sysinfo listeners
         SysInfoListener sysListener = new SysInfoListener();
         OSCin.addListener(MSG_SIZE, sysListener);
         OSCin.addListener(MSG_PORT, sysListener);
@@ -67,6 +80,7 @@ public class MonomeDevice {
         OSCin.addListener(MSG_PREFIX, sysListener);
         OSCin.addListener(MSG_HOST, sysListener);
 
+        // add message listeners
         MsgListener msgListener = new MsgListener();
         OSCin.addListener(prefix + MSG_IN_GRID, msgListener);
         OSCin.addListener(prefix + MSG_IN_TILT, msgListener);
@@ -75,13 +89,14 @@ public class MonomeDevice {
 
         OSCin.startListening();
 
+        // configure serialosc port
         this.portOut = info.getPort();
         OSCout = new OSCPortOut(info.getInetAddresses()[0], this.portOut);
 
         // on creation, this object gets the focus        
         setFocus();      
         
-        // get device details
+        // get device details (id and size)
         OSCMessage infoMsg = new OSCMessage();
         infoMsg.setAddress(MSG_INFO);
         OSCout.send(infoMsg);
@@ -110,8 +125,9 @@ public class MonomeDevice {
      * @throws IOException
      */
     public void setFocus() throws IOException{
-        setPortIn(this.portIn);
-        setPrefix(this.prefix);
+        setPortIn();
+        setPrefix();
+        setHost();
         focus = true;
     }
         
@@ -122,8 +138,7 @@ public class MonomeDevice {
      * @param prefix
      * @throws IOException
      */
-    public void setPrefix(String prefix) throws IOException {
-        this.prefix = prefix;
+    private void setPrefix() throws IOException {
         OSCMessage prefixMsg = new OSCMessage();
         prefixMsg.setAddress(MSG_PREFIX);
         prefixMsg.addArgument(prefix);
@@ -136,8 +151,7 @@ public class MonomeDevice {
      * @param portIn
      * @throws IOException
      */
-    public void setPortIn(int portIn) throws IOException {
-        this.portIn = portIn;
+    private void setPortIn() throws IOException {
         OSCMessage portMsg = new OSCMessage();
         portMsg.setAddress(MSG_PORT);
         portMsg.addArgument(new Integer(portIn));
@@ -150,8 +164,7 @@ public class MonomeDevice {
      * @param portIn
      * @throws IOException
      */
-    public void setHost(String host) throws IOException {
-        this.host = host;
+    private void setHost() throws IOException {
         OSCMessage hostMsg = new OSCMessage();
         hostMsg.setAddress(MSG_HOST);
         hostMsg.addArgument(host);
@@ -226,10 +239,10 @@ public class MonomeDevice {
                 int newPort = ((Integer) msg.getArguments()[0]).intValue();
                 focusPort = (newPort == portIn);               
             } else if (MSG_HOST.equals(address)) {
-                if(host != null){
-                    String newHost = (String) msg.getArguments()[0];                
-                    focusHost = host.equals(newHost);
-                }
+//                if(host != null){
+//                    String newHost = (String) msg.getArguments()[0];                
+//                    focusHost = host.equals(newHost);
+//                }
             } else if (MSG_PREFIX.equals(address)) {
                 String newPrefix = (String) msg.getArguments()[0];
                 focusPrefix = prefix.equals(newPrefix);

@@ -54,11 +54,11 @@ public class MonomeZeroconf {
      * @param portNumber
      * @return the object proxying the real device
      */
-    public MonomeDevice connect(String name, String prefix, int portNumber) {
+    public MonomeDevice connect(String name, String prefix, String host, int portNumber) {
         ServiceInfo info = monomesMap.get(name);
         if (info != null)
             try {
-                return new MonomeDevice(info, prefix, portNumber);
+                return new MonomeDevice(info, prefix, host, portNumber);
             } catch (IOException e) {
                 // swallow exception and notify to log
                 logger.severe("Couldn't connect to " + name + ": " + e.getMessage());
@@ -67,6 +67,19 @@ public class MonomeZeroconf {
         else
             return null;
     }
+    
+    public MonomeDevice connect(String name) {
+        return connect(name, MonomeDevice.DEFAULT_PREFIX);
+    }
+    
+    public MonomeDevice connect(String name, String prefix) {
+        return connect(name, prefix, MonomeDevice.DEFAULT_PORT);
+    }
+
+    public MonomeDevice connect(String name, String prefix, int portNumber) {
+        return connect(name, prefix, MonomeDevice.DEFAULT_HOST, portNumber);
+    }
+
 
     @Override
     protected void finalize() throws Throwable {
@@ -120,7 +133,7 @@ public class MonomeZeroconf {
         }
 
         // connect to the first found device
-        final MonomeDevice m = s.connect(monomes[0], "/myapp", 8000);
+        final MonomeDevice m = s.connect(monomes[0], "/myapp", "localhost", 8000);
         // listen for grid events
         m.addListener(new GridListener() {
 
