@@ -136,10 +136,22 @@ public class MonomeZeroconf {
         final MonomeDevice m = s.connect(monomes[0], "/myapp", "localhost", 8000);
         // listen for grid events
         m.addListener(new GridListener() {
-
+            int tilt = 0;
             @Override
             public void press(int x, int y, int state) {
                 m.grid.set(x, y, state);
+                if (x == 0 && y == 0){
+                    // active tilt with button 0,0
+                    m.tilt.set(0, tilt = tilt ^ 0x0001);
+                    m.tilt.set(1, tilt);
+                }
+            }
+        });
+        
+        m.addListener(new TiltListener() {            
+            @Override
+            public void tilt(int sensor, int x, int y, int z) {
+                System.out.println("Tilt["+sensor+", "+x+", "+y+", "+z+"]");                
             }
         });
 

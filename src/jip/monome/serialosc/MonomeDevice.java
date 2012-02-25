@@ -3,7 +3,6 @@ package jip.monome.serialosc;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 
 import javax.jmdns.ServiceInfo;
 
@@ -32,7 +31,7 @@ public class MonomeDevice {
     public static final String MSG_ROTATION = "/sys/rotation";
 
     public static final String MSG_IN_GRID = "/grid/key";
-    public static final String MSG_IN_TILT = "/tilt/tilt";
+    public static final String MSG_IN_TILT = "/tilt";
     public static final String MSG_IN_ENCD = "/enc/delta";
     public static final String MSG_IN_ENCK = "/enc/key";
 
@@ -45,6 +44,7 @@ public class MonomeDevice {
 
     public final GridCommands grid;
     public final RingCommands ring;
+    public final TiltCommands tilt;
 
     ArrayList<GridListener> gridListeners = new ArrayList<GridListener>();
     ArrayList<TiltListener> tiltListeners = new ArrayList<TiltListener>();
@@ -104,6 +104,7 @@ public class MonomeDevice {
         // Device commands
         grid = new GridCommands(this);
         ring = new RingCommands(this);
+        tilt = new TiltCommands(this);
     }
 
     /**
